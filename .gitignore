@@ -1,5 +1,2 @@
-venv/
-*.pdf
-*.csv
-*.json
 .env
+venv/
