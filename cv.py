@@ -5,6 +5,7 @@ from openparse import processing, DocumentParser
 from llama_index.core import VectorStoreIndex
 from dotenv import load_dotenv
 import csv
+import json
 
 # Load environment variables
 load_dotenv()
@@ -27,58 +28,78 @@ semantic_pipeline = processing.SemanticIngestionPipeline(
 # List all PDF files in the folder
 cv_files = [f for f in os.listdir(cv_folder) if f.endswith(".pdf")]
 
-# Store parsed nodes from all CVs
-all_nodes = []
+# CSV file path
+csv_file = "cv_data.csv"
+
+# Write header row to CSV
+with open(csv_file, mode="w", encoding="utf-8", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Name", "Age", "Email", "Address", "Education", "Work Experience"])
+
 
 # Process each CV file
 for cv_file in cv_files:
     cv_path = os.path.join(cv_folder, cv_file)
     print(f"Processing CV: {cv_file}...")
 
-    # Parse document
-    parser = DocumentParser()
-    parsed_doc = parser.parse(cv_path)
+    try:
+        # Parse document
+        parser = DocumentParser()
+        parsed_doc = parser.parse(cv_path)
 
-    # Convert document to LlamaIndex nodes and store them
-    nodes = parsed_doc.to_llama_index_nodes()
-    all_nodes.extend(nodes)  # Append nodes to the list
+        # Convert document to LlamaIndex nodes
+        nodes = parsed_doc.to_llama_index_nodes()
 
-# Create a VectorStoreIndex with all parsed nodes
-index = VectorStoreIndex(nodes=all_nodes)
+        # Create a VectorStoreIndex for the current CV
+        index = VectorStoreIndex(nodes=nodes)
+        query_engine = index.as_query_engine()
 
-# Create a query engine
-query_engine = index.as_query_engine()
+        # Define query to extract structured data
+        query = """
+        Trả về họ và tên, tuổi, email, địa chỉ, quá trình học tập, kinh nghiệm làm việc.
+        với định dạng JSON như bên dưới. Nếu thông tin không có thì trả về "" (chuỗi rỗng).
+        {
+           "name": "",
+           "age": "",
+           "email": "",
+           "address": "",
+           "education": "",
+           "work_experience": ""
+        }
+        """
 
-# Define query to extract structured data from all CVs
-query = """
-Trả về họ và tên, tuổi, địa chỉ, quá trình học tập, kinh nghiệm làm việc.
-Trả dữ liệu về định dạng JSON với các trường tương ứng sử dụng key tiếng Anh.
-"""
-response = query_engine.query(query)
+        response = query_engine.query(query)
 
-# Print response
-print(response)
+        try:
+            # Convert response to dictionary. Handle potential JSON decode errors.
+            cv_data = json.loads(response.response)
 
-# Convert response to JSON format
-cv_data = response.response  # Assuming response.response is JSON-like
+            # Write extracted data to CSV (append to file)
+            with open(csv_file, mode="a", encoding="utf-8", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([
+                    cv_data.get("name", ""),
+                    cv_data.get("age", ""),
+                    cv_data.get("email", ""),
+                    cv_data.get("address", ""),
+                    cv_data.get("education", ""),
+                    cv_data.get("work_experience", "")
+                ])
 
-# Define CSV file path
-csv_file = "cv_data.csv"
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON for {cv_file}: {e}")
+            print(f"Response was: {response.response}") #print the response to help debug
+            # Optionally, you could write the raw response to the CSV for manual inspection
+            with open(csv_file, mode="a", encoding="utf-8", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([cv_file,"JSON Decode Error", response.response]) #write the filename and error
 
-# Write extracted data to CSV
-with open(csv_file, mode="w", encoding="utf-8", newline="") as file:
-    writer = csv.writer(file)
+    except Exception as e:
+        print(f"Error processing {cv_file}: {e}")
+        # Optionally, add error handling for file processing issues (e.g., file not found)
+        with open(csv_file, mode="a", encoding="utf-8", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([cv_file,"File Processing Error", str(e)])
 
-    # Write header row
-    writer.writerow(["Name", "Age", "Address", "Education", "Work Experience"])
-
-    # Write data row
-    writer.writerow([
-        cv_data.get("name", ""), 
-        cv_data.get("age", ""), 
-        cv_data.get("address", ""), 
-        "; ".join([f"{edu['degree']} - {edu['university']} ({edu['year']})" for edu in cv_data.get("education", [])]),
-        "; ".join([f"{exp['role']} at {exp['company']} ({exp['years']})" for exp in cv_data.get("work_experience", [])])
-    ])
 
 print(f"✅ CV data saved to {csv_file} successfully!")
