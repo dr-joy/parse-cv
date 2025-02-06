@@ -14,4 +14,4 @@ pip install -r requirements.txt
 python3 cv.py
 ```
 
-pip install llama-index llama-index-embeddings-ollama openparse python-dotenv llama-index-llms-ollama llama-index-embeddings-huggingface
+pip install llama-index llama-index-embeddings-ollama openparse python-dotenv llama-index-llms-ollama llama-index-embeddings-huggingface flask
