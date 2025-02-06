@@ -28,50 +28,59 @@ CORS(app)  # Cho phép tất cả các origin truy cập API
 
 @app.route("/process_cv", methods=["POST"])
 def process_cv():
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+    files = request.files.getlist("files")
+    print(f"Number of uploaded files: {len(files)}")
+    results = []
     
-    file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+    for file in files:
+        try:
+            # Parse document
+            temp_path = os.path.join("./cv/", file.filename)
+            file.save(temp_path)
+            parser = DocumentParser()
+            parsed_doc = parser.parse(temp_path)  # Use file directly
+
+            # Convert document to LlamaIndex nodes
+            nodes = parsed_doc.to_llama_index_nodes()
+
+            # Create a VectorStoreIndex for the current CV
+            index = VectorStoreIndex(nodes=nodes)
+            query_engine = index.as_query_engine()
+
+            # Define query to extract structured data
+            query = """
+            Trả về họ và tên, tuổi, email, địa chỉ, quá trình học tập, kinh nghiệm làm việc.
+            với định dạng JSON như bên dưới. Nếu thông tin không có thì trả về "" (chuỗi rỗng).
+            {
+               "name": "",
+               "age": "",
+               "email": "",
+               "address": "",
+               "education": "",
+               "work_experience": ""
+            }
+            """
+
+            response = query_engine.query(query)
+            
+            # Ensure response is valid JSON
+            structured_data = json.loads(response.response)
+            os.remove(temp_path)
+            results.append(structured_data)
+
+        except Exception as e:
+            print(f"Error processing {file}: {str(e)}")
+            results.append({
+                "name": "",
+                "age": "",
+                "email": "",
+                "address": "",
+                "education": "",
+                "work_experience": "",
+                "error": str(e)  # Add error field for debugging
+            })
     
-    try:
-        # Save the uploaded file temporarily
-        temp_path = os.path.join("./cv/", file.filename)
-        file.save(temp_path)
-        
-        # Parse document
-        parser = DocumentParser()
-        parsed_doc = parser.parse(temp_path)
-
-        # Convert document to LlamaIndex nodes
-        nodes = parsed_doc.to_llama_index_nodes()
-
-        # Create a VectorStoreIndex for the current CV
-        index = VectorStoreIndex(nodes=nodes)
-        query_engine = index.as_query_engine()
-
-        # Define query to extract structured data
-        query = """
-        Trả về họ và tên, tuổi, email, địa chỉ, quá trình học tập, kinh nghiệm làm việc.
-        với định dạng JSON như bên dưới. Nếu thông tin không có thì trả về "" (chuỗi rỗng).
-        {
-           "name": "",
-           "age": "",
-           "email": "",
-           "address": "",
-           "education": "",
-           "work_experience": ""
-        }
-        """
-
-        response = query_engine.query(query)
-        
-        # Remove temp file
-        os.remove(temp_path)
-        return jsonify(json.loads(response.response))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify(results)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
