@@ -1,4 +1,3 @@
-// pages/index.js
 "use client";
 import React, { useState } from "react";
 import axios from "axios";
@@ -13,35 +12,40 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Input,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 
 export default function Home() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [cvData, setCvData] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [cvDataList, setCvDataList] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    setSelectedFiles(Array.from(e.target.files));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
+
     setLoading(true);
     setError("");
-    setCvData(null);
+    setCvDataList([]);
 
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
 
     try {
-      // Adjust the API URL if necessary.
       const { data } = await axios.post("http://localhost:5001/process_cv", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setCvData(data);
+
+      setCvDataList(data); // Assuming backend returns an array of parsed CV data
     } catch (err) {
       setError(err.response?.data?.error || "An error occurred");
     } finally {
@@ -50,29 +54,32 @@ export default function Home() {
   };
 
   const renderTable = () => {
-    if (!cvData) return null;
-    const fields = [
-      { label: "Name", key: "name" },
-      { label: "Age", key: "age" },
-      { label: "Email", key: "email" },
-      { label: "Address", key: "address" },
-      { label: "Education", key: "education" },
-      { label: "Work Experience", key: "work_experience" },
-    ];
+    if (cvDataList.length === 0) return null;
+
     return (
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
+      <TableContainer component={Paper} sx={{ mt: 3, boxShadow: 3, borderRadius: 2 }}>
+        <Typography variant="h6" sx={{ p: 2, backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
+          Processed CV Data
+        </Typography>
         <Table>
-          <TableHead>
+          <TableHead sx={{ backgroundColor: "#1976d2" }}>
             <TableRow>
-              <TableCell>Field</TableCell>
-              <TableCell>Value</TableCell>
+              {["Name", "Age", "Email", "Address", "Education", "Work Experience"].map((header) => (
+                <TableCell key={header} sx={{ color: "white", fontWeight: "bold" }}>
+                  {header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {fields.map((field) => (
-              <TableRow key={field.key}>
-                <TableCell>{field.label}</TableCell>
-                <TableCell>{cvData[field.key]}</TableCell>
+            {cvDataList.map((cvData, index) => (
+              <TableRow key={index} sx={{ "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" } }}>
+                <TableCell>{cvData.name || "N/A"}</TableCell>
+                <TableCell>{cvData.age || "N/A"}</TableCell>
+                <TableCell>{cvData.email || "N/A"}</TableCell>
+                <TableCell>{cvData.address || "N/A"}</TableCell>
+                <TableCell>{cvData.education || "N/A"}</TableCell>
+                <TableCell>{cvData.work_experience || "N/A"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -82,12 +89,26 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Process CV
+        Process Multiple CVs
       </Typography>
       <form onSubmit={handleSubmit}>
-        <Input type="file" onChange={handleFileChange} />
+        <Button variant="contained" component="label">
+          Choose Files
+          <input type="file" multiple hidden onChange={handleFileChange} />
+        </Button>
+
+        {selectedFiles.length > 0 && (
+          <List>
+            {selectedFiles.map((file, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={file.name} />
+              </ListItem>
+            ))}
+          </List>
+        )}
+
         <Button
           type="submit"
           variant="contained"
@@ -98,11 +119,13 @@ export default function Home() {
           {loading ? "Processing..." : "Upload"}
         </Button>
       </form>
+
       {error && (
         <Typography color="error" sx={{ mt: 2 }}>
           {error}
         </Typography>
       )}
+
       {renderTable()}
     </Container>
   );
