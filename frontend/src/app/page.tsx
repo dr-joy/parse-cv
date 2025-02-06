@@ -17,7 +17,10 @@ import {
   ListItemText,
 } from "@mui/material";
 
+import { useTheme } from "@mui/material/styles";
+
 export default function Home() {
+  const theme = useTheme();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [cvDataList, setCvDataList] = useState([]);
   const [error, setError] = useState("");
@@ -55,9 +58,10 @@ export default function Home() {
 
   const renderTable = () => {
     if (cvDataList.length === 0) return null;
-
+    const theme = useTheme();
+  
     return (
-      <TableContainer component={Paper} sx={{ mt: 3, boxShadow: 3, borderRadius: 2 }}>
+      <TableContainer component={Paper} sx={{ width: '100%' , boxShadow: 3, borderRadius: 2 }}>
         <Typography variant="h6" sx={{ p: 2, backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
           Processed CV Data
         </Typography>
@@ -89,24 +93,25 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container maxWidth={false} sx={{ px: { xs: 2, sm: 6, md: 8 } }}>
       <Typography variant="h4" gutterBottom>
         Process Multiple CVs
       </Typography>
-      <form onSubmit={handleSubmit}>
-        <Button variant="contained" component="label">
+      <form onSubmit={handleSubmit} style={{  flexDirection: 'column', gap: '1rem' }}>
+        <Button variant="contained" component="label" sx={{ mr: 2 }}>
           Choose Files
           <input type="file" multiple hidden onChange={handleFileChange} />
         </Button>
+        <br/>
 
         {selectedFiles.length > 0 && (
-          <List>
+            <List sx={{ pb: 2, pt: 0 }}>
             {selectedFiles.map((file, index) => (
               <ListItem key={index}>
-                <ListItemText primary={file.name} />
+              <ListItemText primary={file.name} />
               </ListItem>
             ))}
-          </List>
+            </List>
         )}
 
         <Button
@@ -114,7 +119,14 @@ export default function Home() {
           variant="contained"
           color="primary"
           disabled={loading}
-          sx={{ mt: 2 }}
+          sx={{
+            mt: 2,
+            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.primary.main,
+            color: theme.palette.mode === 'dark' ? theme.palette.grey[300] : theme.palette.common.white,
+            '&:hover': {
+              backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.primary.dark,
+            },
+          }}
         >
           {loading ? "Processing..." : "Upload"}
         </Button>
@@ -125,6 +137,7 @@ export default function Home() {
           {error}
         </Typography>
       )}
+       <br/>
 
       {renderTable()}
     </Container>
