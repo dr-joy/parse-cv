@@ -44,9 +44,13 @@ export default function Home() {
     });
 
     try {
-      const { data } = await axios.post("http://localhost:5001/process_cv", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const { data } = await axios.post(
+        "http://192.168.4.78:5001/process_cv",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       setCvDataList(data); // Assuming backend returns an array of parsed CV data
     } catch (err) {
@@ -58,18 +62,33 @@ export default function Home() {
 
   const renderTable = () => {
     if (cvDataList.length === 0) return null;
-    const theme = useTheme();
-  
+
     return (
-      <TableContainer component={Paper} sx={{ width: '100%' , boxShadow: 3, borderRadius: 2 }}>
-        <Typography variant="h6" sx={{ p: 2, backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
+      <TableContainer
+        component={Paper}
+        sx={{ width: "100%", boxShadow: 3, borderRadius: 2 }}
+      >
+        <Typography
+          variant="h6"
+          sx={{ p: 2, backgroundColor: "#f5f5f5", fontWeight: "bold" }}
+        >
           Processed CV Data
         </Typography>
         <Table>
           <TableHead sx={{ backgroundColor: "#1976d2" }}>
             <TableRow>
-              {["Name", "Age", "Email", "Address", "Education", "Work Experience"].map((header) => (
-                <TableCell key={header} sx={{ color: "white", fontWeight: "bold" }}>
+              {[
+                "Name",
+                "Age",
+                "Email",
+                "Address",
+                "Education",
+                "Work Experience",
+              ].map((header) => (
+                <TableCell
+                  key={header}
+                  sx={{ color: "white", fontWeight: "bold" }}
+                >
                   {header}
                 </TableCell>
               ))}
@@ -77,7 +96,10 @@ export default function Home() {
           </TableHead>
           <TableBody>
             {cvDataList.map((cvData, index) => (
-              <TableRow key={index} sx={{ "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" } }}>
+              <TableRow
+                key={index}
+                sx={{ "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" } }}
+              >
                 <TableCell>{cvData.name || "N/A"}</TableCell>
                 <TableCell>{cvData.age || "N/A"}</TableCell>
                 <TableCell>{cvData.email || "N/A"}</TableCell>
@@ -97,21 +119,24 @@ export default function Home() {
       <Typography variant="h4" gutterBottom>
         Process Multiple CVs
       </Typography>
-      <form onSubmit={handleSubmit} style={{  flexDirection: 'column', gap: '1rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ flexDirection: "column", gap: "1rem" }}
+      >
         <Button variant="contained" component="label" sx={{ mr: 2 }}>
           Choose Files
           <input type="file" multiple hidden onChange={handleFileChange} />
         </Button>
-        <br/>
+        <br />
 
         {selectedFiles.length > 0 && (
-            <List sx={{ pb: 2, pt: 0 }}>
+          <List sx={{ pb: 2, pt: 0 }}>
             {selectedFiles.map((file, index) => (
               <ListItem key={index}>
-              <ListItemText primary={file.name} />
+                <ListItemText primary={file.name} />
               </ListItem>
             ))}
-            </List>
+          </List>
         )}
 
         <Button
@@ -121,10 +146,19 @@ export default function Home() {
           disabled={loading}
           sx={{
             mt: 2,
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.primary.main,
-            color: theme.palette.mode === 'dark' ? theme.palette.grey[300] : theme.palette.common.white,
-            '&:hover': {
-              backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.primary.dark,
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[800]
+                : theme.palette.primary.main,
+            color:
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[300]
+                : theme.palette.common.white,
+            "&:hover": {
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? theme.palette.grey[700]
+                  : theme.palette.primary.dark,
             },
           }}
         >
@@ -137,7 +171,7 @@ export default function Home() {
           {error}
         </Typography>
       )}
-       <br/>
+      <br />
 
       {renderTable()}
     </Container>
