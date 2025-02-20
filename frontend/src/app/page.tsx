@@ -115,16 +115,20 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth={false} sx={{ px: { xs: 2, sm: 6, md: 8 } }}>
+    <Container
+      maxWidth={false}
+      sx={{ px: { xs: 2, sm: 6, md: 8 } }}
+      className="py-4"
+    >
       <Typography variant="h4" gutterBottom>
-        Process Multiple CVs
+        複数の履歴書を処理する
       </Typography>
       <form
         onSubmit={handleSubmit}
         style={{ flexDirection: "column", gap: "1rem" }}
       >
         <Button variant="contained" component="label" sx={{ mr: 2 }}>
-          Choose Files
+          ファイルを選択
           <input type="file" multiple hidden onChange={handleFileChange} />
         </Button>
         <br />
@@ -162,7 +166,7 @@ export default function Home() {
             },
           }}
         >
-          {loading ? "Processing..." : "Upload"}
+          {loading ? "処理中... " : "アップロード"}
         </Button>
       </form>
 
