@@ -45,7 +45,7 @@ export default function Home() {
 
     try {
       const { data } = await axios.post(
-        "http://192.168.4.78:5001/process_cv",
+        "http://192.168.4.114:5001/process_cv",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -64,14 +64,7 @@ export default function Home() {
     if (cvDataList.length === 0) return;
 
     // Define CSV headers
-    const headers = [
-      "Name",
-      "Age",
-      "Email",
-      "Address",
-      "Education",
-      "Work Experience",
-    ];
+    const headers = ["名前", "  年齢  ", "メール", "住所", "学歴", "職務経験"];
 
     // Convert `cvDataList` to CSV string with proper escaping
     const csvContent = [
@@ -165,21 +158,16 @@ export default function Home() {
           <Table>
             <TableHead sx={{ backgroundColor: "#1976d2" }}>
               <TableRow>
-                {[
-                  "Name",
-                  "Age",
-                  "Email",
-                  "Address",
-                  "Education",
-                  "Work Experience",
-                ].map((header) => (
-                  <TableCell
-                    key={header}
-                    sx={{ color: "white", fontWeight: "bold" }}
-                  >
-                    {header}
-                  </TableCell>
-                ))}
+                {["名前", "  年齢  ", "メール", "住所", "学歴", "職務経験"].map(
+                  (header) => (
+                    <TableCell
+                      key={header}
+                      sx={{ color: "white", fontWeight: "bold" }}
+                    >
+                      {header}
+                    </TableCell>
+                  )
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
