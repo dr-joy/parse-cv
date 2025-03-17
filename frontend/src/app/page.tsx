@@ -158,7 +158,7 @@ export default function Home() {
           <Table>
             <TableHead sx={{ backgroundColor: "#1976d2" }}>
               <TableRow>
-                {["名前", "  年齢  ", "メール", "住所", "学歴", "職務経験"].map(
+                {["名前", "年齢", "メール", "住所", "学歴", "職務経験"].map(
                   (header) => (
                     <TableCell
                       key={header}
@@ -176,8 +176,12 @@ export default function Home() {
                   key={index}
                   sx={{ "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" } }}
                 >
-                  <TableCell>{cvData.name || "N/A"}</TableCell>
-                  <TableCell>{cvData.age || "N/A"}</TableCell>
+                  <TableCell className="w-[150px]">
+                    {cvData.name || "N/A"}
+                  </TableCell>
+                  <TableCell className="w-[80px]">
+                    {cvData.age || "N/A"}
+                  </TableCell>
                   <TableCell>{cvData.email || "N/A"}</TableCell>
                   <TableCell>{cvData.address || "N/A"}</TableCell>
                   <TableCell>{cvData.education || "N/A"}</TableCell>
